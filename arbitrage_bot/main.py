@@ -8,7 +8,7 @@ import websockets
 from loguru import logger
 
 try:
-    from . import config, data_sources, strategy, approvals, matching
+    from . import config, data_sources, strategy, approvals, matching, webui
     from .logging_utils import (
         configure_logging,
         ensure_opportunity_log_headers,
@@ -20,7 +20,7 @@ except ImportError:  # pragma: no cover - fallback for "python arbitrage_bot/mai
     ROOT = pathlib.Path(__file__).resolve().parent.parent
     if str(ROOT) not in sys.path:
         sys.path.append(str(ROOT))
-    from arbitrage_bot import config, data_sources, strategy, approvals, matching
+    from arbitrage_bot import config, data_sources, strategy, approvals, matching, webui
     from arbitrage_bot.logging_utils import (
         configure_logging,
         ensure_opportunity_log_headers,
@@ -36,7 +36,19 @@ async def main() -> None:
     ensure_paper_trades_log_headers()
 
     state = BotState()
-    matching.match_approver.set_pending_handler(lambda cand: state.approval_queue.put_nowait(cand))
+    approval_mode = config.settings.approval_mode
+    if approval_mode not in {"cli", "web", "both"}:
+        logger.warning("Unknown APPROVAL_MODE '%s', falling back to 'cli'.", approval_mode)
+        approval_mode = "cli"
+    logger.info("Approval mode: %s", approval_mode)
+
+    def handle_pending(candidate):
+        key = candidate.key()
+        state.pending_candidates[key] = candidate
+        if approval_mode in {"cli", "both"}:
+            state.approval_queue.put_nowait(candidate)
+
+    matching.match_approver.set_pending_handler(handle_pending)
 
     port = 8765
     logger.info("Starting WebSocket server on ws://localhost:%s", port)
@@ -47,8 +59,19 @@ async def main() -> None:
         asyncio.create_task(strategy.run_strategy(state)),
         asyncio.create_task(data_sources.poll_polymarket_data(state)),
         asyncio.create_task(approvals.bootstrap_pending_queue(state)),
-        asyncio.create_task(approvals.approval_prompt_loop(state)),
     }
+    if approval_mode in {"cli", "both"}:
+        tasks.add(asyncio.create_task(approvals.approval_prompt_loop(state)))
+    if approval_mode in {"web", "both"}:
+        tasks.add(
+            asyncio.create_task(
+                webui.run_web_ui(
+                    state,
+                    host=config.settings.approval_web_host,
+                    port=config.settings.approval_web_port,
+                )
+            )
+        )
     if config.settings.sell_mode in {"paper", "both"}:
         tasks.add(asyncio.create_task(paper_sell_strategy(state)))
 

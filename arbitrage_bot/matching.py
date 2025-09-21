@@ -30,6 +30,10 @@ class MatchCandidate:
             str(self.score),
         ]
 
+    def key(self) -> str:
+        """Return canonical key used for pending/approved bookkeeping."""
+        return f"{self.pinnacle_title.strip().lower()}::{self.polymarket_id}"
+
 
 class MatchApprover:
     """Tracks approved match pairs and surfaces new candidates for manual review."""

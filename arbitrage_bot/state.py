@@ -4,7 +4,10 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Any, Deque, Dict, List, Set
+from typing import TYPE_CHECKING, Any, Deque, Dict, List, Set
+
+if TYPE_CHECKING:  # pragma: no cover - typing helpers only
+    from .matching import MatchCandidate
 
 
 @dataclass
@@ -17,6 +20,7 @@ class BotState:
     background_tasks: Set[Any] = field(default_factory=set)
     clob_client: Any | None = None
     approval_queue: asyncio.Queue = field(default_factory=asyncio.Queue)
+    pending_candidates: Dict[str, 'MatchCandidate'] = field(default_factory=dict)
 
 
 state = BotState()

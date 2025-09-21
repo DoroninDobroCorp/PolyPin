@@ -19,6 +19,7 @@ async def approval_prompt_loop(state: BotState, *, requeue_delay: float = 30.0) 
 
         # Пара могла уже попасть в approved вручную.
         if match_approver.is_approved(candidate):
+            state.pending_candidates.pop(candidate.key(), None)
             continue
 
         prompt = (
@@ -39,8 +40,10 @@ async def approval_prompt_loop(state: BotState, *, requeue_delay: float = 30.0) 
 
         if decision in {"y", "yes", "да", "д"}:
             match_approver.approve(candidate)
+            state.pending_candidates.pop(candidate.key(), None)
         elif decision in {"n", "no", "нет", "н"}:
             match_approver.reject(candidate)
+            state.pending_candidates.pop(candidate.key(), None)
         else:
             logger.info(
                 "Отложено подтверждение пары '%s' ↔ '%s' (повторим через %.0f c).",

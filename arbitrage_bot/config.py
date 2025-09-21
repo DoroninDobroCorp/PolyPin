@@ -56,6 +56,13 @@ def _float_env(name: str, default: str) -> float:
         return float(default)
 
 
+def _int_env(name: str, default: str) -> int:
+    try:
+        return int(os.getenv(name, default))
+    except (TypeError, ValueError):
+        return int(default)
+
+
 @dataclass(frozen=True)
 class Settings:
     bet_amount_usd: float = _float_env("BET_AMOUNT_USD", "5")
@@ -67,6 +74,9 @@ class Settings:
     proxy_address: str | None = os.getenv("POLY_PROXY_ADDRESS") or os.getenv("FUNDER_ADDRESS")
     test_mode: bool = (os.getenv("TEST_MODE", "false") or "false").lower() in {"1", "true", "yes"}
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
+    approval_mode: str = (os.getenv("APPROVAL_MODE", "cli") or "cli").lower()
+    approval_web_host: str = os.getenv("APPROVAL_WEB_HOST", "127.0.0.1") or "127.0.0.1"
+    approval_web_port: int = _int_env("APPROVAL_WEB_PORT", "8787")
 
 
 settings = Settings()
