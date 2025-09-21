@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+arbitrage_bot/.env
+arbitrage_bot/.env.local
+arbitrage_bot/.envrc
+arbitrage_bot/data_cache/
+arbitrage_bot/opportunity_logs/
+arbitrage_bot/trade_logs/
+arbitrage_bot/match_registry/pending_matches.csv
+arbitrage_bot/match_registry/approved_matches.json
+arbitrage_bot/pinnacle_data.json
+arbitrage_bot/polymarket_data.json
