@@ -1,0 +1,27 @@
+pin:
+  url: http://65.109.115.96:5556/
+  events_url: fixtures
+  odds_url: odds
+  username:
+  token: VCBSIHBpbm5hY2xldHJhbnNsYXRvcgo=
+  timeout: 30
+  live:
+    events_interval: 5
+    odds_interval: 2
+  prematch:
+    events_interval: 40
+    odds_interval: 15
+
+  sport:
+    football: true
+    tennis: true
+    basketball: true
+    volleyball: true
+    table_tennis: false
+    handball: false
+
+
+  parse_live: true
+
+sender:
+  url: ws://localhost:8765
